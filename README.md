@@ -122,7 +122,7 @@ If fallback modes are enabled, an additional `match_strategy` column may appear 
 
 ## Example
 
-Use `vumc.csv` and `litholink,csv` as example, running step 1) Generate candidate matches (get `matcheds.csv`) and 2) Filter matches and attach Litholink columns (get `matches.filtered.csv` and `matches.filtered.with_litholink.csv`)
+Use `vumc.csv` and `litholink.csv` as example, running step 1) Generate candidate matches (get `matcheds.csv`) and 2) Filter matches and attach Litholink columns (get `matches.filtered.csv` and `matches.filtered.with_litholink.csv`)
 
 ---
 
