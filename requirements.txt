@@ -1,2 +1,2 @@
 pandas>=2.0
-recordlinkage==0.16
+rapidfuzz>=3.0
