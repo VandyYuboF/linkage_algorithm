@@ -57,8 +57,9 @@ If you just want to run the linkage with default settings:
 **Input requirements (Quick Start)**
 
 - The local file is expected to contain:
-  - `USDHubID` (or another unique patient identifier)
-  - `first_name`, `last_name`
+  - `USDHubID`
+  - `first_name`
+  - `last_name`
   - `sex`
   - `dob` (date of birth)
 
