@@ -1,5 +1,22 @@
 # Linkage Algorithm (Cross-Site)
 
+### What this tool does (at a glance)
+
+This pipeline links patient records between a local dataset (e.g., VUMC) and a Litholink dataset using conservative name, date-of-birth, and sex matching rules. In the first step, it generates candidate matches based on agreement across identifying fields. In the second step, it filters those candidates to retain only high-confidence matches, attaches Litholink attributes, and separates records into two final outputs: one file containing successfully matched, de-identified Litholink records ready to be sent to USDHub, and another file containing unmatched Litholink records that may require manual review or further investigation.
+
+```bash
+Step 1
+Local CSV  ──┐
+             ├─► linkage_algorithm.py ──► matches.csv
+Litholink  ──┘
+
+Step 2
+matches.csv + litholink.csv
+            └─► filter_matches.py
+                  ├─► matches.filtered.with_litholink.csv  (SEND TO USDHUB)
+                  └─► litholink.unmatched.csv              (REVIEW)
+```
+
 This repository provides a small, configurable CLI tool to link patient records across sites using:
 
 - Blocking (default: `dob` + `sex`)
@@ -12,6 +29,8 @@ It also includes a second script to post-filter matches into:
 - **3-field matches (first + DOB + sex)** with a guardrail:
   - If a Litholink record already has any 4-field match, we do **not** emit any 3-field matches for that Litholink ID.
 
+Data note: This pipeline operates on local files only and does not transmit data externally.
+
 ---
 
 ## Installation
@@ -22,22 +41,91 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Not sure where to start?
+- If you just need results, follow **Quick Start**
+- If you need to adjust matching logic, read **Step-by-step guide**  
+- If you are integrating into code, see **Programmatic use**
+
 ---
 
-## 1) Generate candidate matches (matches.csv)
+## Quick Start:
 
-Minimal usage (the pattern you described):
-(##########)
+If you just want to run the linkage with default settings:
+
+1. Put your local file and Litholink file in this folder. 
+
+**Input requirements (Quick Start)**
+
+- The local file is expected to contain:
+  - `USDHubID` (or another unique patient identifier)
+  - `first_name`, `last_name`
+  - `sex`
+  - `dob` (date of birth)
+
+- The Litholink file is expected to contain:
+  - `PatientID` (or another unique patient identifier)
+  - `Patient` (full patient name)
+  - `Gender`
+  - `DOB`
+
+If your files use different identifier column names, specify them using `--left-id` and `--right-id`.  
+You do **not** need to rename your CSV columns.
+  
+2. Rename them to `local.csv` and `litholink.csv`
+
+3. Run:
 
 ```bash
 python linkage_algorithm.py \
-  --left vumc.csv --right litholink.csv \
+  --left local.csv --right litholink.csv \
+  --left-id USDHubID --right-id PatientID \
+  --min-sum 3 \
+  --out matches.csv
+
+python filter_matches.py \
+  --matches matches.csv \
+  --litholink litholink.csv \
+  --left-id USDHubID \
+  --right-id PatientID \
+  --out-filtered matches.filtered.csv \
+  --out-merged matches.filtered.with_litholink.csv \
+  --out-unmatched-litholink litholink.unmatched.csv
+```
+
+4. After running the code, check:
+
+- `matches.filtered.with_litholink.csv` should **not be empty**
+- `litholink.unmatched.csv` should usually contain some rows
+- If both files are empty, double-check:
+  - Column names
+  - ID mappings (`--left-id`, `--right-id`)
+  - Date formats in DOB columns
+
+5. After completing the above steps, review the following files:
+
+- **`matches.filtered.with_litholink.csv`**  
+  Contains all successfully matched, de-identified Litholink records. This file can be sent directly to **USDHub**.
+
+- **`litholink.unmatched.csv`**  
+  Contains Litholink records that could not be matched to any local record. These records may require manual chart review or additional linkage work.
+
+---
+
+## Step-by-step guide (with explanations)
+
+### Step 1: Generate candidate matches (matches.csv)
+
+Minimal usage:
+
+```bash
+python linkage_algorithm.py \
+  --left local.csv --right litholink.csv \
   --left-id USDHubID --right-id PatientID \
   --min-sum 3 \
   --out matches.csv
 ```
 
-### Required input columns (defaults)
+#### Required input columns (defaults)
 
 By default, both files are expected to have:
 
@@ -50,7 +138,7 @@ If your columns have different names, map them:
 
 ```bash
 python linkage_algorithm.py \
-  --left vumc.csv --right litholink.csv \
+  --left local.csv --right litholink.csv \
   --left-id USDHubID --right-id PatientID \
   --left-first fname --left-last lname --left-dob birth_date --left-sex gender \
   --right-first first --right-last last --right-dob dob --right-sex sex \
@@ -58,7 +146,7 @@ python linkage_algorithm.py \
   --out matches.csv
 ```
 
-### Litholink combined-name convenience (`Patient` / `patient_name`)
+#### Litholink combined-name convenience (`Patient` / `patient_name`)
 
 Many Litholink exports store the combined patient name in a single column:
 
@@ -71,7 +159,7 @@ If the RIGHT table does **not** have usable first/last name columns, the linkage
 
 In this case you typically do **not** need to specify `--right-first/--right-last`.
 
-### Key scoring/tuning flags
+#### Key scoring/tuning flags
 
 - `--min-sum` (default `3`): minimum number of satisfied rules to keep a pair
 - `--jw-first`, `--jw-last` (default `0.85`): Jaro–Winkler thresholds for first/last name
@@ -82,18 +170,16 @@ Optional fallback passes (off by default):
 - `--fallback-3field`: retry unmatched records using a **(last_name + dob + sex)** rule set
 - `--fallback-firstname`: retry unmatched records using **(first_name + dob + sex)** (helpful when last name changes)
 
----
-
-## 2) Filter matches and attach Litholink columns
+### Step 2: Filter matches and attach Litholink columns
 
 This script takes:
 - `matches.csv` from step (1)
 - the original Litholink file (`litholink.csv`) to attach extra columns
 
 It outputs:
-- `matches.filtered.csv`: only 4-field matches and 3-field (first+dob+sex) matches, with the guardrail described above
+- `matches.filtered.csv`: intermediate filtered linkage results (primarily for auditing and debugging)
 - `matches.filtered.with_litholink.csv`: the filtered matches joined back to Litholink columns on `PatientID`, this file only includes `USDHubID` and the rest of columns in litholink.csv, except: [`Physician`, `Patient`, `PatientID`, `DOB`, `SampleID`, `CystineSampleID`]
-- `litholink.unmatched.csv`: contains all records in `litholink.csv` that could not be matched to any record in `vumc.csv` after filtering.
+- `litholink.unmatched.csv`: contains all records in `litholink.csv` that could not be matched to any record in `local.csv` after filtering.
 
 Example:
 
@@ -108,9 +194,7 @@ python filter_matches.py \
   --out-unmatched-litholink litholink.unmatched.csv
 ```
 
----
-
-## Output schema (matches.csv)
+### Output schema (matches.csv)
 
 `matches.csv` contains (at minimum):
 
@@ -120,12 +204,6 @@ python filter_matches.py \
 - `sum` (integer count of matched fields)
 
 If fallback modes are enabled, an additional `match_strategy` column may appear (e.g., `4field`, `3field`, `3field_first`).
-
----
-
-## Example
-
-Use `vumc.csv` and `litholink.csv` as example, running step 1) Generate candidate matches (get `matcheds.csv`) and 2) Filter matches and attach Litholink columns (get `matches.filtered.csv` and `matches.filtered.with_litholink.csv`)
 
 ---
 
