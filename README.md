@@ -92,6 +92,7 @@ This script takes:
 It outputs:
 - `matches.filtered.csv`: only 4-field matches and 3-field (first+dob+sex) matches, with the guardrail described above
 - `matches.filtered.with_litholink.csv`: the filtered matches joined back to Litholink columns on `PatientID`, this file only includes `USDHubID` and the rest of columns in litholink.csv, except: [`Physician`, `Patient`, `PatientID`, `DOB`, `SampleID`, `CystineSampleID`]
+- `litholink.unmatched.csv`: Contains all records in `litholink.csv` that could not be matched to any record in `vumc.csv` after filtering.
 
 Example:
 
@@ -102,7 +103,8 @@ python filter_matches.py \
   --left-id USDHubID \
   --right-id PatientID \
   --out-filtered matches.filtered.csv \
-  --out-merged matches.filtered.with_litholink.csv
+  --out-merged matches.filtered.with_litholink.csv \
+  --out-unmatched-litholink litholink.unmatched.csv
 ```
 
 ---

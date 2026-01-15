@@ -85,6 +85,23 @@ def merge_with_litholink(
     merged = merged.drop(['Physician', 'Patient', 'PatientID', 'DOB', 'SampleID', 'CystineSampleID', 'first_name' ,'last_name' ,'dob' ,'sex' ,'sum'], axis = 1)
     return merged
 
+def find_unmatched_litholink(
+    litholink_df: pd.DataFrame,
+    filtered_matches: pd.DataFrame,
+    *,
+    right_id: str,
+) -> pd.DataFrame:
+    """Return Litholink records that do not appear in filtered matches."""
+    if right_id not in litholink_df.columns:
+        raise ValueError(
+            f"litholink.csv does not contain column '{right_id}'. "
+            f"Present columns: {list(litholink_df.columns)}"
+        )
+
+    matched_ids = filtered_matches[right_id].dropna().unique()
+    unmatched = litholink_df[~litholink_df[right_id].isin(matched_ids)].copy()
+    return unmatched.reset_index(drop=True)
+
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Filter matches and attach Litholink columns.")
@@ -94,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--right-id", required=True, help="Right ID column name (e.g., PatientID)")
     p.add_argument("--out-filtered", required=True, help="Output path for filtered matches CSV")
     p.add_argument("--out-merged", required=True, help="Output path for filtered+merged CSV (matches + litholink columns)")
+    p.add_argument("--out-unmatched-litholink", required=True, help="Output path for Litholink records with no match in target dataset")
+
     args = p.parse_args(argv)
 
     matches_df = pd.read_csv(args.matches)
@@ -105,8 +124,12 @@ def main(argv: list[str] | None = None) -> int:
     merged = merge_with_litholink(filtered, litho_df, right_id=args.right_id)
     merged.to_csv(args.out_merged, index=False)
 
+    unmatched_litho = find_unmatched_litholink(litho_df, filtered, right_id=args.right_id)
+    unmatched_litho.to_csv(args.out_unmatched_litholink, index=False)
+
     print(f"Wrote {len(filtered):,} rows to {args.out_filtered}")
     print(f"Wrote {len(merged):,} rows to {args.out_merged}")
+    print(f"Wrote {len(unmatched_litho):,} rows to {args.out_unmatched_litholink}")
     return 0
 
 
