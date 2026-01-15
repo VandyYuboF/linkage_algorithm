@@ -27,6 +27,7 @@ pip install -r requirements.txt
 ## 1) Generate candidate matches (matches.csv)
 
 Minimal usage (the pattern you described):
+(##########)
 
 ```bash
 python linkage_algorithm.py \
