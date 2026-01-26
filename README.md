@@ -60,14 +60,14 @@ If you just want to run the linkage with default settings:
   - `USDHubID`
   - `first_name`
   - `last_name`
-  - `sex`
-  - `dob` (date of birth)
+  - `sex` ('M' for male, 'F' for female)
+  - `dob` (date of birth; recommended format: mm/dd/yyyy)
 
 - The Litholink file is expected to contain:
   - `PatientID` (or another unique patient identifier)
   - `Patient` (full patient name)
-  - `Gender`
-  - `DOB`
+  - `Gender` ('M' for male, 'F' for female)
+  - `DOB` (date of birth; recommended format: mm/dd/yyyy)
 
 If your files use different identifier column names, specify them using `--left-id` and `--right-id`.  
 You do **not** need to rename your CSV columns.
@@ -105,10 +105,12 @@ python filter_matches.py \
 5. After completing the above steps, review the following files:
 
 - **`matches.filtered.with_litholink.csv`**  
-  Contains all successfully matched, de-identified Litholink records. This file can be sent directly to **USDHub**.
+  Contains all successfully matched, de-identified Litholink records. This file can be sent directly to **USDHub**:
+  - CHOP (for PEDSnet sites)
+  - VUMC (for STAR sites)
 
 - **`litholink.unmatched.csv`**  
-  Contains Litholink records that could not be matched to any local record. These records may require manual chart review or additional linkage work.
+  Contains Litholink records that could not be matched to any local record. These records may require manual chart review or additional linkage work. This file should be shared only with your site’s USDHub PI and research coordinator and must not leave your institution.
 
 ---
 
