@@ -2,7 +2,7 @@
 
 ### What this tool does (at a glance)
 
-This pipeline links patient records between a local dataset (e.g., VUMC) and a Litholink dataset using conservative name, date-of-birth, and sex matching rules. In the first step, it generates candidate matches based on agreement across identifying fields. In the second step, it filters those candidates to retain only high-confidence matches, attaches Litholink attributes, and separates records into two final outputs: one file containing successfully matched, de-identified Litholink records ready to be sent to USDHub, and another file containing unmatched Litholink records that may require manual review or further investigation.
+This pipeline links patient records between a local dataset (e.g., VUMC) and a Litholink dataset using conservative name, date-of-birth (dob), and sex matching rules. In the first step, it generates candidate matches based on agreement across identifying fields. In the second step, it filters those candidates to retain only high-confidence matches, attaches Litholink attributes, and separates records into two final outputs: one file containing successfully matched, de-identified Litholink records ready to be sent to USDHub, and another file containing unmatched Litholink records that may require manual review or further investigation.
 
 ```bash
 Step 1
@@ -60,14 +60,14 @@ If you just want to run the linkage with default settings:
   - `USDHubID`
   - `first_name`
   - `last_name`
-  - `sex` ('M' for male, 'F' for female)
-  - `dob` (date of birth; recommended format: mm/dd/yyyy)
+  - `sex` (recommended format: 'M' for male, 'F' for female)
+  - `dob` (recommended format: mm/dd/yyyy)
 
 - The Litholink file is expected to contain:
   - `PatientID` (or another unique patient identifier)
   - `Patient` (full patient name)
-  - `Gender` ('M' for male, 'F' for female)
-  - `DOB` (date of birth; recommended format: mm/dd/yyyy)
+  - `Gender` (recommended format: 'M' for male, 'F' for female)
+  - `DOB` (recommended format: mm/dd/yyyy)
 
 If your files use different identifier column names, specify them using `--left-id` and `--right-id`.  
 You do **not** need to rename your CSV columns.
@@ -95,8 +95,8 @@ python filter_matches.py \
 
 4. After running the code, check:
 
-- `matches.filtered.with_litholink.csv` should **not be empty**
-- `litholink.unmatched.csv` should usually contain some rows
+- **`matches.filtered.with_litholink.csv`** should **not be empty**
+- **`litholink.unmatched.csv`** should usually contain some rows
 - If both files are empty, double-check:
   - Column names
   - ID mappings (`--left-id`, `--right-id`)
@@ -104,13 +104,19 @@ python filter_matches.py \
 
 5. After completing the above steps, review the following files:
 
-- **`matches.filtered.with_litholink.csv`**  
-  Contains all successfully matched, de-identified Litholink records. This file can be sent directly to **USDHub**:
+- **`matches.filtered.with_litholink.csv`**
+
+  Contains all successfully matched, de-identified Litholink records.
+
+  This file can be sent directly to **USDHub**:
   - CHOP (for PEDSnet sites)
   - VUMC (for STAR sites)
 
-- **`litholink.unmatched.csv`**  
-  Contains Litholink records that could not be matched to any local record. These records may require manual chart review or additional linkage work. This file should be shared only with your site’s USDHub PI and research coordinator and must not leave your institution.
+- **`litholink.unmatched.csv`**
+
+  Contains Litholink records that could not be matched to any local record. These records may require manual chart review or additional linkage work.
+
+  This file should be shared only with your site’s USDHub PI and research coordinator and must not leave your institution.
 
 ---
 
