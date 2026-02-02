@@ -1,0 +1,3 @@
+PatientID,Patient,Gender,DOB,Physician,SampleID,CystineSampleID,Column1,Column2,Column3,Column4,USDHubID,local_last_name,local_first_name,local_sex,local_dob,abs_dob_diff_days
+F006,"Kay, Steven",F,1/1/2020,,,,,,,,6,Kay,Steven,F,1/5/2020,4
+F006,"Kay, Steven",F,1/1/2020,,,,,,,,7,Kay,Steve,F,1/3/2020,2
