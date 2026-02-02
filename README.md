@@ -43,7 +43,8 @@ pip install -r requirements.txt
 
 ## Not sure where to start?
 - If you just need results, follow **Quick Start**
-- If you need to adjust matching logic, read **Step-by-step guide**  
+- If you need to adjust matching logic, read **Step-by-step guide**
+- If you need to adjust in input and ouput, read **Optional utilities**  
 - If you are integrating into code, see **Programmatic use**
 
 ---
@@ -215,6 +216,53 @@ python filter_matches.py \
 If fallback modes are enabled, an additional `match_strategy` column may appear (e.g., `4field`, `3field`, `3field_first`).
 
 ---
+
+## Optional utilities
+
+### 1) Add DOB difference for unmatched Litholink candidates
+
+`add_dob_diff_to_unmatched.py` takes:
+- `matches.csv` from `linkage_algorithm.py` (candidate pairs where first/last names fuzzy matched per the linkage step)
+- `litholink.unmatched.csv` from `filter_matches.py`
+- the original `local.csv` and `litholink.csv`
+
+It outputs **all** Litholink–Local pairs (for unmatched Litholink IDs) where **sex matches exactly**, and adds:
+- local patient info: `USDHubID`, `local_last_name`, `local_first_name`, `local_sex`, `local_dob`
+- `abs_dob_diff_days`
+
+By default it keeps both DOB-equal and DOB-different pairs; add `--dob-diff-only` to keep only `abs_dob_diff_days > 0`.
+
+Example:
+```bash
+python add_dob_diff_to_unmatched.py
+  --matches matches.csv
+  --unmatched litholink.unmatched.csv
+  --left local.csv --right litholink.csv
+  --left-id USDHubID --right-id PatientID
+  --left-first-col first_name
+  --left-last-col last_name
+  --left-sex-col sex
+  --right-sex-col Gender
+  --left-dob-col dob
+  --right-dob-col DOB
+  --dob-format "%m/%d/%Y"
+  --out litholink.unmatched.dob_review_pairs.csv
+```
+
+### 2) Split a full-name column into first_name / last_name
+
+If your input file has a single full-name field (e.g., `Patient`), you can generate
+`first_name` and `last_name` columns (while keeping all original columns):
+
+```bash
+python name_preprocess_split_full_name.py \
+  --input litholink.csv \
+  --full-name-col Patient \
+  --out litholink.with_split_names.csv
+```
+
+---
+
 
 ## Programmatic use
 
