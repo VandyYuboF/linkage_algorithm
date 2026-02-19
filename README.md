@@ -234,18 +234,18 @@ By default it keeps both DOB-equal and DOB-different pairs; add `--dob-diff-only
 
 Example:
 ```bash
-python add_dob_diff_to_unmatched.py
-  --matches matches.csv
-  --unmatched litholink.unmatched.csv
-  --left local.csv --right litholink.csv
-  --left-id USDHubID --right-id PatientID
-  --left-first-col first_name
-  --left-last-col last_name
-  --left-sex-col sex
-  --right-sex-col Gender
-  --left-dob-col dob
-  --right-dob-col DOB
-  --dob-format "%m/%d/%Y"
+python add_dob_diff_to_unmatched.py \
+  --matches matches.csv \
+  --unmatched litholink.unmatched.csv \
+  --left local.csv --right litholink.csv \
+  --left-id USDHubID --right-id PatientID \
+  --left-first-col first_name \
+  --left-last-col last_name \
+  --left-sex-col sex \
+  --right-sex-col Gender \
+  --left-dob-col dob \
+  --right-dob-col DOB \
+  --dob-format "%m/%d/%Y" \
   --out litholink.unmatched.dob_review_pairs.csv
 ```
 
