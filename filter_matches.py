@@ -119,13 +119,13 @@ def main(argv: list[str] | None = None) -> int:
     litho_df = pd.read_csv(args.litholink)
 
     filtered = filter_matches(matches_df, left_id=args.left_id, right_id=args.right_id)
-    filtered.to_csv(args.out_filtered, index=False)
+    filtered.drop_duplicates().to_csv(args.out_filtered, index=False)
 
     merged = merge_with_litholink(filtered, litho_df, right_id=args.right_id)
-    merged.to_csv(args.out_merged, index=False)
+    merged.drop_duplicates().to_csv(args.out_merged, index=False)
 
     unmatched_litho = find_unmatched_litholink(litho_df, filtered, right_id=args.right_id)
-    unmatched_litho.to_csv(args.out_unmatched_litholink, index=False)
+    unmatched_litho.drop_duplicates().to_csv(args.out_unmatched_litholink, index=False)
 
     print(f"Wrote {len(filtered):,} rows to {args.out_filtered}")
     print(f"Wrote {len(merged):,} rows to {args.out_merged}")
