@@ -554,7 +554,7 @@ def main():
         return_all_features=args.return_all,
     )
 
-    out.to_csv(args.out, index=False)
+    out.drop_duplicates().to_csv(args.out, index=False)
     print(f"Wrote {len(out):,} rows to {args.out}")
 
 if __name__ == "__main__":
